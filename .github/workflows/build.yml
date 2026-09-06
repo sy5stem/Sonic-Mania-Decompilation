@@ -1,97 +1,59 @@
-name: Build Mania
+name: Build Sonic Mania PC
 
 on:
   push:
-    paths:
-      - dependencies/**
-      - SonicMania/**
-      - .github/workflows/build.yml
-      - CMakeLists.txt
-    branches:
-      - master
-
-env:
-  GENERAL_FLAGS: "-DWITH_RSDK=OFF -DCMAKE_BUILD_TYPE=Release"
-  V5_FLAGS: "-DRETRO_REVISION=2"
-  V5U_FLAGS: "-DRETRO_REVISION=3"
-  # Normally you would use $VCPKG_INSTALLATION_PATH, but it's broken...so hardcode C:/vcpkg
-  GENERAL_WIN_FLAGS: "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
-  WIN32_FLAGS: "-DVCPKG_TARGET_TRIPLET=x86-windows-static -A Win32"
-  WIN64_FLAGS: "-DVCPKG_TARGET_TRIPLET=x64-windows-static"
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
 
 jobs:
-  mania-windows:
-    runs-on: windows-latest
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact-name: SonicMania-Linux
+            build-dir: build
+          - os: windows-latest
+            artifact-name: SonicMania-Windows
+            build-dir: build/Release
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Build Mania
-        run: |
-          cmake -B build_v5 ${{env.GENERAL_FLAGS}} ${{env.GENERAL_WIN_FLAGS}} ${{env.WIN32_FLAGS}} ${{env.V5_FLAGS}}
-          cmake --build build_v5 --parallel --config Release
-          cmake -B build_v5U ${{env.GENERAL_FLAGS}} ${{env.GENERAL_WIN_FLAGS}} ${{env.WIN32_FLAGS}} ${{env.V5U_FLAGS}}
-          cmake --build build_v5U --parallel --config Release
-      - name: Move artifacts
-        run: |
-          mkdir artifacts
-          mkdir artifacts/v5
-          mkdir artifacts/v5U
-          mv ./build_v5/Release/*.dll ./artifacts/v5/
-          mv ./build_v5U/Release/*.dll ./artifacts/v5U/
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: mania-windows
-          path: artifacts
-  mania-windows-x64:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Build Mania
-        run: |
-          cmake -B build_v5 ${{env.GENERAL_FLAGS}} ${{env.GENERAL_WIN_FLAGS}} ${{env.WIN64_FLAGS}} ${{env.V5_FLAGS}}
-          cmake --build build_v5 --parallel --config Release
-          cmake -B build_v5U ${{env.GENERAL_FLAGS}} ${{env.GENERAL_WIN_FLAGS}} ${{env.WIN64_FLAGS}} ${{env.V5U_FLAGS}}
-          cmake --build build_v5U --parallel --config Release
-      - name: Move artifacts
-        run: |
-          mkdir artifacts
-          mkdir artifacts/v5
-          mkdir artifacts/v5U
-          mv ./build_v5/Release/*.dll ./artifacts/v5/
-          mv ./build_v5U/Release/*.dll ./artifacts/v5U/
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: mania-windows-x64
-          path: artifacts
-  mania-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Build Mania
-        run: |
-          cmake -B build_v5 ${{env.GENERAL_FLAGS}} ${{env.V5_FLAGS}}
-          cmake --build build_v5 --parallel
-          cmake -B build_v5U ${{env.GENERAL_FLAGS}} ${{env.V5U_FLAGS}}
-          cmake --build build_v5U --parallel
-      - name: Move artifacts
-        run: |
-          mkdir artifacts
-          mkdir artifacts/v5
-          mkdir artifacts/v5U
-          mv ./build_v5/lib*.so ./artifacts/v5/
-          mv ./build_v5U/lib*.so ./artifacts/v5U/
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: mania-linux
-          path: artifacts
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    # --- LINUX DEPENDENCIES ---
+    - name: Install Dependencies (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake libsdl2-dev libglew-dev libvorbis-dev libtheora-dev
+
+    # --- WINDOWS DEPENDENCIES (vcpkg handles this via cmake) ---
+    - name: Set up msbuild (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: microsoft/setup-msbuild@v2
+
+    # --- BUILD PROCESS ---
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build Project
+      run: cmake --build build --config Release
+
+    # --- ARTIFACT PACKAGING ---
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact-name }}
+        path: |
+          ${{ matrix.build-dir }}/SonicMania*
+          ${{ matrix.build-dir }}/*.exe
+          ${{ matrix.build-dir }}/*.dll
+          ${{ matrix.build-dir }}/*.so
+        if-no-files-found: warn
