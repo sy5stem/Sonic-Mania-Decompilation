@@ -3,7 +3,7 @@
 
 + You can get the official release of Sonic Mania (Plus) from:
   * Windows
-    * [Via Steam](https://store.steampowered.com/app/584400/Sonic_Mania/)
+    * [Via Steam] (https://store.steampowered.com/app/584400/Sonic_Mania/)
     * [Via The Epic Games Store](https://www.epicgames.com/store/en-US/p/sonic-mania)
   * [Switch, via the eShop](https://www.nintendo.com/games/detail/sonic-mania-switch/)
   * [PS4, via the Store](https://store.playstation.com/en-us/product/UP0177-CUSA07023_00-SONICMANIA000000)
