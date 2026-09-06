@@ -7,7 +7,7 @@
     * [Via The Epic Games Store] (https://www.epicgames.com/store/en-US/p/sonic-mania)
   * [Switch, via the eShop](https://www.nintendo.com/games/detail/sonic-mania-switch/)
   * [PS4, via the Store](https://store.playstation.com/en-us/product/UP0177-CUSA07023_00-SONICMANIA000000)
-  * [Xbox One, via the Store](https://www.xbox.com/en-US/games/store/sonic-mania/BXH46NQT9W4Q/0001)
+  * [Xbox One, via the Store] (https://www.xbox.com/en-US/games/store/sonic-mania/BXH46NQT9W4Q/0001)
 
 Even if your platform isn't supported by the above official releases, you **must** buy it for the assets. The Netflix Games version is NOT supported.
 
